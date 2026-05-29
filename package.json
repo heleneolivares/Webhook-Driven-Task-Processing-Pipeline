@@ -4,15 +4,15 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-  "build": "tsc",
-  "dev:api": "tsx watch src/api.ts",
-  "dev:worker": "tsx watch src/worker/index.ts",
-  "start:api": "node dist/api.js",
-  "start:worker": "node dist/worker/index.js",
-  "db:generate": "drizzle-kit generate",
-  "db:migrate": "drizzle-kit migrate",
-  "db:studio": "drizzle-kit studio"
-},
+    "build": "tsc",
+    "dev:api": "tsx watch src/api.ts",
+    "dev:worker": "tsx watch src/worker/index.ts",
+    "start:api": "node dist/api.js",
+    "start:worker": "node dist/worker/index.js",
+    "db:generate": "dotenv -e .env -- drizzle-kit generate",
+    "db:migrate": "dotenv -e .env -- drizzle-kit migrate",
+    "db:studio": "dotenv -e .env -- drizzle-kit studio"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/heleneolivares/Webhook-Driven-Task-Processing-Pipeline.git"
@@ -36,7 +36,8 @@
     "@types/node": "^25.9.1",
     "@types/pg": "^8.20.0",
     "@types/uuid": "^10.0.0",
-    "drizzle-kit": "^0.31.10",
+    "dotenv-cli": "^11.0.0",
+    "drizzle-kit": "^0.28.0",
     "ts-node": "^10.9.2",
     "tsx": "^4.22.3",
     "typescript": "^6.0.3"
