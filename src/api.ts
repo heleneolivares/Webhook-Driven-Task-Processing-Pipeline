@@ -1,6 +1,7 @@
 import express from 'express'
 import dotenv from 'dotenv'
 import pipelinesRouter from './modules/pipelines/routes'
+import subscribersRouter from './modules/subscribers/routes'
 
 dotenv.config()
 
@@ -14,6 +15,7 @@ app.get('/health', (req, res) => {
 })
 
 app.use('/pipelines', pipelinesRouter)
+app.use('/subscribers', subscribersRouter)
 
 app.listen(PORT, () => {
   console.log(`API running on port ${PORT}`)
