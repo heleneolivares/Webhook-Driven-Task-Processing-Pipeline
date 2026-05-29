@@ -3,10 +3,11 @@ dotenv.config()
 
 import { db } from '../db'
 import { jobs, webhookEvents, pipelines, pipelineSubscribers, subscribers, deliveryAttempts } from '../db/schema'
-import { eq, and, isNull, lte } from 'drizzle-orm'
+import { eq, and, isNull } from 'drizzle-orm'
 import { applyFilter } from '../processing/actions/filter'
 import { applyAiAnalysis } from '../processing/actions/ai_analysis'
 import { applyAggregate } from '../processing/actions/aggregate'
+import * as webhookQueries from '../modules/webhooks/queries'
 import axios from 'axios'
 
 const POLL_INTERVAL_MS = 3000
@@ -49,6 +50,7 @@ async function processJob(job: any) {
     } else if (pipeline.actionType === 'ai_analysis') {
       result = await applyAiAnalysis(payload, config as any) as any
     } else if (pipeline.actionType === 'aggregate') {
+      const events = payload.events as Record<string, unknown>[]
       result = applyAggregate([payload], config as any) as any
     }
 
@@ -77,6 +79,80 @@ async function processJob(job: any) {
         completedAt: new Date()
       })
       .where(eq(jobs.id, job.id))
+  }
+}
+async function processExpiredBuckets() {
+  const expiredBuckets = await webhookQueries.getExpiredBuckets()
+
+  for (const bucket of expiredBuckets) {
+    console.log(`Processing expired bucket ${bucket.id} with ${bucket.eventsCount} events...`)
+
+    await webhookQueries.closeBucket(bucket.id)
+
+    const events = await webhookQueries.getEventsByBucketId(bucket.id)
+
+    if (events.length === 0) {
+      await webhookQueries.markBucketAsProcessed(bucket.id)
+      console.log(`Bucket ${bucket.id} was empty, skipping`)
+      continue
+    }
+
+    const pipeline = await db.query.pipelines.findFirst({
+      where: eq(pipelines.id, bucket.pipelineId)
+    })
+
+    if (!pipeline) {
+      await webhookQueries.markBucketAsProcessed(bucket.id)
+      continue
+    }
+
+    const config = pipeline.actionConfig as {
+      windowMinutes?: number
+      maxEvents?: number
+      filter?: { field: string; operator: string; value: unknown }
+      prompt?: string
+    }
+
+    let filteredEvents = events.map(e => e.payload as Record<string, unknown>)
+
+    if (config.filter) {
+      filteredEvents = filteredEvents.filter(payload => {
+        const result = applyFilter(payload, config.filter as any)
+        return result.passed
+      })
+      console.log(`Filter applied: ${filteredEvents.length}/${events.length} events passed`)
+    }
+
+    if (filteredEvents.length === 0) {
+      await webhookQueries.markBucketAsProcessed(bucket.id)
+      console.log(`Bucket ${bucket.id} — no events passed the filter, skipping`)
+      continue
+    }
+
+    const aggregateResult = applyAggregate(filteredEvents, config as any)
+
+    const prompt = config.prompt || 'Analyze these products and identify the best deals, price trends, and recommendations'
+
+    const aiResult = await applyAiAnalysis(
+      { ...aggregateResult, events: filteredEvents },
+      { prompt }
+    )
+
+    const syntheticEvent = await webhookQueries.createWebhookEvent({
+      pipelineId: bucket.pipelineId,
+      payload: aiResult as unknown as Record<string, unknown>
+    })
+
+    const job = await webhookQueries.createAggregateJob(bucket.id, bucket.pipelineId, syntheticEvent.id)
+    await webhookQueries.markBucketAsProcessed(bucket.id)
+
+    await deliverToSubscribers(job.id, job.pipelineId, aiResult as unknown as Record<string, unknown>)
+
+    await db.update(jobs)
+      .set({ status: 'completed', updatedAt: new Date(), completedAt: new Date() })
+      .where(eq(jobs.id, job.id))
+
+    console.log(`Bucket ${bucket.id} processed — delivered AI analysis of ${filteredEvents.length} events`)
   }
 }
 
@@ -152,6 +228,7 @@ async function deliverToSubscribers(
 
 async function pollJobs() {
   try {
+    await processExpiredBuckets()
     const job = await db.query.jobs.findFirst({
       where: eq(jobs.status, 'pending')
     })
