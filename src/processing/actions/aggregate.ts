@@ -1,7 +1,4 @@
-type AggregateConfig = {
-  windowMinutes: number
-  maxEvents?: number
-}
+import { AggregateConfig } from '../../types'
 
 type AggregateResult = {
   totalEvents: number

@@ -1,8 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-
-type AiAnalysisConfig = {
-  prompt?: string
-}
+import {AiAnalysisConfig} from '../../types'
 
 type AiAnalysisResult = {
   originalPayload: Record<string, unknown>

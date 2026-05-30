@@ -1,8 +1,4 @@
-type FilterConfig = {
-  field: string
-  operator: 'gt' | 'lt' | 'eq' | 'gte' | 'lte' | 'neq'
-  value: unknown
-}
+import { FilterConfig } from '../../types'
 
 type FilterResult = {
   passed: boolean
