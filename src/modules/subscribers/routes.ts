@@ -1,28 +1,28 @@
-import { Router, Request, Response } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import * as service from './service'
 
 const router = Router()
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscribers = await service.getAllSubscribers()
     res.json({ subscribers })
-  } catch (error: any) {
-    res.status(500).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.getSubscriberById(id)
     res.json({ subscriber })
-  } catch (error: any) {
-    res.status(404).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { targetUrl } = req.body
     if (!targetUrl) {
@@ -30,50 +30,50 @@ router.post('/', async (req: Request, res: Response) => {
     }
     const subscriber = await service.createSubscriber({ targetUrl })
     res.status(201).json({ subscriber })
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.patch('/:id', async (req: Request, res: Response) => {
+router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.updateSubscriber(id, req.body)
     res.json({ subscriber })
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.delete('/:id', async (req: Request, res: Response) => {
+router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.deleteSubscriber(id)
     res.json({ message: 'Subscriber deleted successfully', subscriber })
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.post('/:id/pipelines/:pipelineId', async (req: Request, res: Response) => {
+router.post('/:id/pipelines/:pipelineId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscriberId = req.params.id as string
     const pipelineId = req.params.pipelineId as string
     const result = await service.linkSubscriberToPipeline(pipelineId, subscriberId)
     res.status(201).json({ message: 'Subscriber linked to pipeline', result })
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
-router.delete('/:id/pipelines/:pipelineId', async (req: Request, res: Response) => {
+router.delete('/:id/pipelines/:pipelineId', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscriberId = req.params.id as string
     const pipelineId = req.params.pipelineId as string
     await service.unlinkSubscriberFromPipeline(pipelineId, subscriberId)
     res.json({ message: 'Subscriber unlinked from pipeline' })
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 

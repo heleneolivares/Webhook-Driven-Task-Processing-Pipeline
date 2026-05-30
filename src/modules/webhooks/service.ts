@@ -1,15 +1,14 @@
 import * as queries from './queries'
 import { getPipelineBySourceKey } from '../pipelines/queries'
+import { AppError } from '../../shared/middleware/errorHandler'
+import { ERRORS } from '../../shared/middleware/errors'
 
 export async function ingestWebhook(sourceKey: string, payload: Record<string, unknown>) {
   const pipeline = await getPipelineBySourceKey(sourceKey)
 
-  if (!pipeline) {
-    throw new Error('Pipeline not found')
-  }
-
+  if (!pipeline) throw new AppError(ERRORS.WEBHOOK_PIPELINE_NOT_FOUND, 404)
   if (!pipeline.isActive || pipeline.deletedAt) {
-    throw new Error('Pipeline is not active')
+    throw new AppError(ERRORS.PIPELINE_NOT_ACTIVE, 400)
   }
   
   if (pipeline.actionType === 'aggregate') {

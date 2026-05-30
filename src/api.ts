@@ -4,6 +4,7 @@ import pipelinesRouter from './modules/pipelines/routes'
 import subscribersRouter from './modules/subscribers/routes'
 import webhooksRouter from './modules/webhooks/routes'
 import jobsRouter from './modules/jobs/routes'
+import { errorHandler } from './shared/middleware/errorHandler'
 
 dotenv.config()
 
@@ -20,6 +21,8 @@ app.use('/pipelines', pipelinesRouter)
 app.use('/subscribers', subscribersRouter)
 app.use('/webhooks', webhooksRouter)
 app.use('/jobs', jobsRouter)
+
+app.use(errorHandler)
 
 app.listen(PORT, () => {
   console.log(`API running on port ${PORT}`)

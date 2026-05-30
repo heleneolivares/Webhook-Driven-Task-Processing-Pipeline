@@ -1,9 +1,9 @@
-import { Router, Request, Response } from 'express'
+import { Router, Request, Response, NextFunction } from 'express'
 import * as service from './service'
 
 const router = Router()
 
-router.post('/:sourceKey', async (req: Request, res: Response) => {
+router.post('/:sourceKey', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const sourceKey = req.params.sourceKey as string
     const payload = req.body
@@ -14,8 +14,8 @@ router.post('/:sourceKey', async (req: Request, res: Response) => {
 
     const result = await service.ingestWebhook(sourceKey, payload)
     res.status(202).json(result)
-  } catch (error: any) {
-    res.status(400).json({ error: error.message })
+  } catch (error) {
+    next(error)
   }
 })
 
