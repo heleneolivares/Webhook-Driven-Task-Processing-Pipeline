@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import * as service from './service'
+import { validateUUID } from '../../shared/middleware/validateUUID'
 
 const router = Router()
 
@@ -12,7 +13,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', validateUUID('id'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const job = await service.getJobById(id)
@@ -22,7 +23,7 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-router.get('/:id/delivery-attempts', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id/delivery-attempts', validateUUID('id'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const attempts = await service.getDeliveryAttemptsByJobId(id)

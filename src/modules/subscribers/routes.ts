@@ -1,5 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import * as service from './service'
+import { validateUUID } from '../../shared/middleware/validateUUID'
 
 const router = Router()
 
@@ -12,7 +13,7 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:id', validateUUID('id'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.getSubscriberById(id)
@@ -35,7 +36,7 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 })
 
-router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.patch('/:id', validateUUID('id'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.updateSubscriber(id, req.body)
@@ -45,7 +46,7 @@ router.patch('/:id', async (req: Request, res: Response, next: NextFunction) => 
   }
 })
 
-router.delete('/:id', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id', validateUUID('id'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const id = req.params.id as string
     const subscriber = await service.deleteSubscriber(id)
@@ -55,7 +56,7 @@ router.delete('/:id', async (req: Request, res: Response, next: NextFunction) =>
   }
 })
 
-router.post('/:id/pipelines/:pipelineId', async (req: Request, res: Response, next: NextFunction) => {
+router.post('/:id/pipelines/:pipelineId', validateUUID('id'), validateUUID('pipelineId'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscriberId = req.params.id as string
     const pipelineId = req.params.pipelineId as string
@@ -66,7 +67,7 @@ router.post('/:id/pipelines/:pipelineId', async (req: Request, res: Response, ne
   }
 })
 
-router.delete('/:id/pipelines/:pipelineId', async (req: Request, res: Response, next: NextFunction) => {
+router.delete('/:id/pipelines/:pipelineId', validateUUID('id'), validateUUID('pipelineId'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const subscriberId = req.params.id as string
     const pipelineId = req.params.pipelineId as string
