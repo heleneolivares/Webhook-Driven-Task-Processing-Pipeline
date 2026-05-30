@@ -234,7 +234,13 @@ Failed deliveries retry up to 3 times with exponential backoff. Every attempt lo
 The `aggregate` action uses a bucket system to collect events over a time window. When the window expires, events are filtered and analyzed together by Gemini AI.
 
 ---
+## 🛡️ Error Handling
 
+- Centralized error handler middleware with `AppError` class
+- UUID validation middleware on all routes
+- Consistent error constants across the application
+- Structured error logging with method and path
+---
 ## 👩‍💻 Author
 
 **Helene Olivares**
